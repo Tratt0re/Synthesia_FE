@@ -7,6 +7,7 @@ import { SiteHeader } from "../components/site-header";
 import { SiteFooter } from "../components/site-footer";
 import { PageTitleProvider } from "../contexts/page-title-provider";
 import { ThemeProvider } from "../components/theme-provider";
+import { UserProvider } from "../contexts/user-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,31 +44,25 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <PageTitleProvider>
-            <SidebarProvider
-              style={
-                {
-                  "--sidebar-width": "calc(var(--spacing) * 72)",
-                  "--header-height": "calc(var(--spacing) * 12)",
-                } as React.CSSProperties
-              }
-            >
-              <AppSidebar variant="inset" />
-              <SidebarInset>
-                <SiteHeader />
-                <div className="flex flex-1 flex-col">
-                  <div className="@container/main flex flex-1 flex-col gap-2">
-                    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-                      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-                        {children}
-                      </main>
-                    </div>
-                  </div>
-                </div>
-                <SiteFooter />
-              </SidebarInset>
-            </SidebarProvider>
-          </PageTitleProvider>
+          <UserProvider>
+            <PageTitleProvider>
+              <SidebarProvider
+                style={
+                  {
+                    "--sidebar-width": "calc(var(--spacing) * 72)",
+                    "--header-height": "calc(var(--spacing) * 12)",
+                  } as React.CSSProperties
+                }
+              >
+                <AppSidebar variant="inset" />
+                <SidebarInset>
+                  <SiteHeader />
+                  {children}
+                  <SiteFooter />
+                </SidebarInset>
+              </SidebarProvider>
+            </PageTitleProvider>
+          </UserProvider>
         </ThemeProvider>
 
       </body>

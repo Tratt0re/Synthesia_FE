@@ -9,7 +9,7 @@ export function SiteFooter() {
         <div className="mt-auto w-full">
             <footer >
                 <Separator />
-                <div className="max-w-screen-xl mx-auto px-6 xl:px-0 py-8 flex flex-col-reverse sm:flex-row items-center justify-between gap-y-4">
+                <div className="mx-auto px-6 xl:px-4 py-8 flex flex-col-reverse sm:flex-row items-center justify-between gap-y-4">
                     <span className="text-sm text-muted-foreground">
                         &copy; {year}{" "}
                         <Link href="/" className="hover:underline" aria-label="Home">

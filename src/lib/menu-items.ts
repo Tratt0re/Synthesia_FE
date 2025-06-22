@@ -1,7 +1,6 @@
 import {
   IconArchiveFilled,
   IconHome,
-  IconSettings,
   IconWriting,
   type Icon,
 } from "@tabler/icons-react";
@@ -28,10 +27,5 @@ export const MENU_ITEMS: MenuItem[] = [
     title: "Archive",
     url: "/archive",
     icon: IconArchiveFilled,
-  },
-  {
-    title: "Settings",
-    url: "/settings",
-    icon: IconSettings,
-  },
+  }
 ];

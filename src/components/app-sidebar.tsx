@@ -12,6 +12,7 @@ import {
 } from "@/src/components/ui/sidebar"
 import { MENU_ITEMS } from "../lib/menu-items"
 import Link from "next/link"
+import { NavUser } from "./nav-user"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -35,7 +36,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={MENU_ITEMS} />
       </SidebarContent>
       <SidebarFooter>
-        <span className="text-base font-semibold">Write something</span>
+        <SidebarFooter>
+          <NavUser/>
+        </SidebarFooter>
       </SidebarFooter>
     </Sidebar>
   )
