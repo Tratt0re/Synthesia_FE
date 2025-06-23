@@ -6,22 +6,15 @@ import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 
 import { SummarizeService } from "@/src/services/summarize.service"
-import { LLMModel } from "@/src/types/summarize.type"
+import { AnalyzeResponse, LLMModel } from "@/src/types/summarize.type"
 import { usePageTitle } from "@/src/contexts/page-title-provider"
 
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/src/components/ui/form"
+import { Form } from "@/src/components/ui/form"
 import { Button } from "@/src/components/ui/button"
-import { Textarea } from "@/src/components/ui/textarea"
-import { Input } from "@/src/components/ui/input"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/src/components/ui/select"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/src/components/ui/tabs"
+import { SummarizeFormFields } from "@/src/components/summarize/summarize-form-fields"
+import SpinnerCircle from "@/src/components/ui/spinner"
+import { DocumentSkeleton } from "@/src/components/ui/document-skeleton"
+import { SummaryWindow } from "@/src/components/summarize/summarize-results"
 
 const formSchema = z.object({
   model: z.string().min(1, "Model is required"),
@@ -29,6 +22,7 @@ const formSchema = z.object({
   text: z.string().optional(),
   file: z.any().optional(),
   mode: z.enum(["text", "file"]),
+  entities: z.string().optional(),
 }).superRefine((data, ctx) => {
   if (data.mode === "text" && (!data.text || data.text.trim() === "")) {
     ctx.addIssue({
@@ -45,6 +39,17 @@ const formSchema = z.object({
       message: "File is required when mode is set to 'file'",
     })
   }
+
+  if (data.entities && data.entities.trim().length > 0) {
+    const isValidFormat = /^(\s*[a-zA-Z0-9_]+\s*)(,\s*[a-zA-Z0-9_]+\s*)*$/.test(data.entities)
+    if (!isValidFormat) {
+      ctx.addIssue({
+        path: ["entities"],
+        code: z.ZodIssueCode.custom,
+        message: "Entities must be a comma-separated list (e.g. disease, risk_factor)",
+      })
+    }
+  }
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -54,13 +59,7 @@ export default function Summarize() {
   const { setTitle } = usePageTitle()
   const [models, setModels] = useState<LLMModel[]>([])
   const [loading, setLoading] = useState(false)
-
-  const languages = [
-    { label: "English", value: "eng" },
-    { label: "Italian", value: "ita" },
-    { label: "French", value: "fr" },
-    { label: "Spanish", value: "es" },
-  ]
+  const [summaryResult, setSummaryResult] = useState<AnalyzeResponse | undefined>(undefined)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -72,8 +71,6 @@ export default function Summarize() {
       file: undefined,
     },
   })
-
-  const mode = form.watch("mode")
 
   useEffect(() => {
     async function fetchModels() {
@@ -93,24 +90,29 @@ export default function Summarize() {
   const onSubmit = async (data: FormData) => {
     setLoading(true)
     try {
+      const entityArray = data.entities?.split(",").map((e) => e.trim()).filter((e) => e.length > 0)
+
       if (data.mode === "text" && data.text) {
         const res = await SummarizeService.analyzeText({
           model: data.model,
           language: data.language,
           text: data.text,
-          entities: [],
+          entities: data.entities ? entityArray : [],
         })
         console.log("Text result:", res)
+        setSummaryResult(res)
       } else if (data.mode === "file" && data.file) {
         const res = await SummarizeService.analyzeFile(data.file, {
           model: data.model,
           language: data.language,
-          entities: [],
+          entities: data.entities ? entityArray : [],
         })
         console.log("File result:", res)
+        setSummaryResult(res)
       }
     } catch (err) {
       console.error("Failed to summarize:", err)
+      setSummaryResult(undefined)
     } finally {
       setLoading(false)
     }
@@ -127,117 +129,37 @@ export default function Summarize() {
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-8">
 
-                  {/* Tabs for Mode Selection */}
-                  <Tabs value={mode} onValueChange={(v) => form.setValue("mode", v as "text" | "file")}>
-                    <TabsList>
-                      <TabsTrigger value="text">Text Input</TabsTrigger>
-                      <TabsTrigger value="file">File Upload</TabsTrigger>
-                    </TabsList>
+                  <SummarizeFormFields form={form} models={models} />
 
-                    <TabsContent value="text">
-                      <FormField
-                        control={form.control}
-                        name="text"
-                        render={({ field }) => (
-                          <FormItem className="mt-4">
-                            <FormLabel>Text</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                rows={6}
-                                placeholder="Enter text to summarize"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </TabsContent>
-
-                    <TabsContent value="file">
-                      <FormField
-                        control={form.control}
-                        name="file"
-                        render={({ field: { onChange } }) => (
-                          <FormItem className="mt-4">
-                            <FormLabel>Upload a File (PDF or TXT)</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="file"
-                                accept=".pdf,.txt"
-                                onChange={(e) => onChange(e.target.files?.[0])}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </TabsContent>
-                  </Tabs>
-
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    {/* Model Selection */}
-                    <FormField
-                      control={form.control}
-                      name="model"
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormLabel>Model</FormLabel>
-                          <Select value={field.value} onValueChange={field.onChange}>
-                            <FormControl>
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select a model" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {models.map((m) => (
-                                <SelectItem key={m.model} value={m.model}>
-                                  {m.model}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/*Language Selection */}
-                    <FormField
-                      control={form.control}
-                      name="language"
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormLabel>Language</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select language" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="eng">English</SelectItem>
-                              <SelectItem value="ita">Italian</SelectItem>
-                              <SelectItem value="fr">French</SelectItem>
-                              <SelectItem value="es">Spanish</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <div className="flex flex-col sm:flex-row gap-4 mt-4">
+                    <Button
+                      className="flex-1"
+                      type="button"
+                      variant="outline"
+                      disabled={loading}
+                      onClick={() => {
+                        setSummaryResult(undefined)
+                        form.reset()
+                      }}
+                    >
+                      Reset
+                    </Button>
+                    <Button className="flex-1" type="submit" disabled={loading}>
+                      <div className="flex items-center gap-2">
+                        {loading && <SpinnerCircle />}
+                        {loading ? "Summarizing..." : "Summarize"}
+                      </div>
+                    </Button>
                   </div>
 
-                  <Button type="submit" disabled={loading}>
-                    {loading ? "Summarizing..." : "Summarize"}
-                  </Button>
                 </form>
               </Form>
             </div>
 
             {/* Results Container */}
-            <div className="w-full max-w-3xl mx-auto lg:h-[calc(100vh-8rem)] bg-accent rounded-xl">
-              Hello
+            <div className="w-full max-w-3xl mx-auto lg:h-[calc(100vh-8rem)] bg-sidebar rounded-xl">
+              {loading && <DocumentSkeleton />}
+              {summaryResult && <SummaryWindow result={summaryResult} />}
             </div>
           </div>
         </div>

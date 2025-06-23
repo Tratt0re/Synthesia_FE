@@ -27,14 +27,14 @@ export class UserService {
   }
 
   static async getUserResults(
-    id: string,
+    userId: string,
     skip = 0,
     limit = 10
   ): Promise<ProcessedResult[]> {
-    const response = await api.get(`/user/${id}/results`, {
+    const response = await api.get(`/user/${userId}/results`, {
       params: { skip, limit },
     });
-    return response.data.data.results as ProcessedResult[];
+    return response.data.results as ProcessedResult[];
   }
 
   static async deleteUserResult(
@@ -45,6 +45,7 @@ export class UserService {
       await api.delete(`/user/${userId}/results/${resultId}`);
       return true;
     } catch (error) {
+      console.error(error);
       return false;
     }
   }
