@@ -13,7 +13,7 @@ import { Form } from "@/src/components/ui/form"
 import { Button } from "@/src/components/ui/button"
 import { SummarizeFormFields } from "@/src/components/summarize/summarize-form-fields"
 import SpinnerCircle from "@/src/components/ui/spinner"
-import { DocumentSkeleton } from "@/src/components/ui/document-skeleton"
+import { DocumentSkeleton } from "@/src/components/ui/skeleton-elements"
 import { SummaryWindow } from "@/src/components/summarize/summarize-results"
 
 const formSchema = z.object({

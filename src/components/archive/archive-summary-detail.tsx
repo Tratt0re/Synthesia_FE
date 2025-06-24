@@ -10,9 +10,10 @@ import { formatDate } from "date-fns"
 interface ArchiveSummaryDetailProps {
     entry: ProcessedResult
     onDelete: (entryId: string) => void
+    onHistory: () => void
 }
 
-export function ArchiveSummaryDetail({ entry, onDelete }: ArchiveSummaryDetailProps) {
+export function ArchiveSummaryDetail({ entry, onDelete, onHistory }: ArchiveSummaryDetailProps) {
 
     const createdAt = formatDate(new Date(entry.created_at), "dd/MM/yyyy")
 
@@ -31,8 +32,9 @@ export function ArchiveSummaryDetail({ entry, onDelete }: ArchiveSummaryDetailPr
     return (
         <div className="w-full h-full p-6 overflow-y-auto flex flex-col gap-8">
             {/* Header actions */}
-            <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-2">
+                {/* Badges */}
+                <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="outline">
                         Summary Versions: {entry.summary_history?.length ?? 0}
                     </Badge>
@@ -40,11 +42,13 @@ export function ArchiveSummaryDetail({ entry, onDelete }: ArchiveSummaryDetailPr
                         Entity Versions: {entry.entities_history?.length ?? 0}
                     </Badge>
                 </div>
-                <div className="flex gap-2">
+
+                {/* Action buttons */}
+                <div className="flex flex-wrap gap-2">
                     <Button variant="ghost" size="icon" onClick={handleDownload} aria-label="Download JSON">
                         <Download className="w-4 h-4" />
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => onHistory()}>
                         <History className="w-4 h-4 mr-1" />
                         View History
                     </Button>
@@ -54,9 +58,10 @@ export function ArchiveSummaryDetail({ entry, onDelete }: ArchiveSummaryDetailPr
             {/* Summary */}
             <div>
 
-                <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold mb-2">Summary</h2>
-                    <div className="flex gap-2 mb-2 flex-wrap">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 mb-2">
+                    <h2 className="text-lg font-semibold">Summary</h2>
+
+                    <div className="flex gap-2 flex-wrap">
                         <Badge variant="default">{entry.model}</Badge>
                         <Badge variant="default">{entry.language?.toUpperCase() ?? "N/A"}</Badge>
                         <Badge variant="default">{createdAt}</Badge>

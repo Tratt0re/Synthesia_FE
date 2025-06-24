@@ -5,7 +5,10 @@ import {
   UserUpdateRequest,
   UserResponse,
 } from "@/src/types/user.type";
-import { ProcessedResult } from "../types/processed-result.type";
+import {
+  PaginatedProcessedResult,
+  ProcessedResult,
+} from "../types/processed-result.type";
 
 export class UserService {
   static async createUser(payload: UserCreateRequest): Promise<UserResponse> {
@@ -30,11 +33,20 @@ export class UserService {
     userId: string,
     skip = 0,
     limit = 10
-  ): Promise<ProcessedResult[]> {
+  ): Promise<PaginatedProcessedResult> {
     const response = await api.get(`/user/${userId}/results`, {
       params: { skip, limit },
     });
-    return response.data.results as ProcessedResult[];
+    return response.data as PaginatedProcessedResult;
+  }
+
+  static async getUserResult(
+    userId: string,
+    entryId: string
+  ): Promise<ProcessedResult> {
+    const response = await api.get(`/user/${userId}/results/${entryId}`);
+    console.log(response)
+    return response.data as ProcessedResult;
   }
 
   static async deleteUserResult(

@@ -24,3 +24,8 @@ export interface ProcessedResult {
   created_at: string;
   updated_at: string;
 }
+
+export interface PaginatedProcessedResult {
+  results: ProcessedResult[],
+  total: number
+}

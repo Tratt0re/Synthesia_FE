@@ -31,7 +31,7 @@ export default function Home() {
                 Synthesia is a university thesis project designed to demonstrate the power
                 of modern Large Language Models (LLMs) in real-world tasks. It enables fast,
                 automated summarization and entity extraction from unstructured documents.
-                Whether you're dealing with raw text or PDF files, Synthesia turns complexity
+                Whether you&apos;re dealing with raw text or PDF files, Synthesia turns complexity
                 into clarity — in just a few clicks.
               </p>
 
